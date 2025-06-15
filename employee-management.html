@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html lang="km">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ប្រព័ន្ធគ្រប់គ្រងបុគ្គលិក</title>
+    <style>
+        @font-face {
+            font-family: 'Khmer OS Siemreap';
+            src: url('https://cdn.jsdelivr.net/gh/googlei18n/khmer@master/fonts/KhmerOSsiemreap.ttf') format('truetype');
+        }
+        
+        body {
+            font-family: 'Khmer OS Siemreap', Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+        }
+        
+        .header {
+            background-color: #2c3e50;
+            color: white;
+            padding: 15px 0;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .marquee {
+            display: inline-block;
+            white-space: nowrap;
+            animation: marquee 15s linear infinite;
+        }
+        
+        @keyframes marquee {
+            0% { transform: translateX(100%); }
+            100% { transform: translateX(-100%); }
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: white;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        
+        .tab-container {
+            margin-top: 20px;
+        }
+        
+        .tab-buttons {
+            display: flex;
+            margin-bottom: 10px;
+        }
+        
+        .tab-btn {
+            padding: 10px 20px;
+            background-color: #eee;
+            border: none;
+            cursor: pointer;
+            margin-right: 5px;
+            border-radius: 5px 5px 0 0;
+        }
+        
+        .tab-btn.active {
+            background-color: #3498db;
+            color: white;
+        }
+        
+        .tab-content {
+            display: none;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 0 5px 5px 5px;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        
+        th {
+            background-color: #f2f2f2;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        
+        .btn {
+            padding: 8px 15px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 5px;
+        }
+        
+        .btn-danger {
+            background-color: #e74c3c;
+        }
+        
+        .btn-success {
+            background-color: #2ecc71;
+        }
+        
+        .btn-excel {
+            background-color: #1d6f42;
+        }
+        
+        .search-container {
+            margin-bottom: 20px;
+        }
+        
+        .login-container {
+            max-width: 400px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: white;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        
+        .user-level {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="marquee">ប្រព័ន្ធគ្រប់គ្រងបុគ្គលិក - ក្រោន រីសត </div>
+        <div class="user-level" id="userLevel">អ្នកប្រើប្រាស់: អ្នកគ្រប់គ្រង</div>
+    </div>
+    
+    <div class="container" id="mainContainer">
+        <div class="tab-container">
+            <div class="tab-buttons">
+                <button class="tab-btn active" onclick="openTab('employeeMgmt')">គ្រប់គ្រងបុគ្គលិក</button>
+                <button class="tab-btn" onclick="openTab('newJoin')">បុគ្គលិកថ្មី</button>
+                <button class="tab-btn" onclick="openTab('resigned')">បុគ្គលិកឈប់</button>
+                <button class="tab-btn" onclick="openTab('reports')">របាយការណ៍</button>
+                <button class="tab-btn" onclick="openTab('userMgmt')">គ្រប់គ្រងអ្នកប្រើប្រាស់</button>
+                <button class="btn btn-excel" onclick="exportToExcel()">Export to Excel</button>
+            </div>
+            
+            <div id="employeeMgmt" class="tab-content active">
+                <h2>គ្រប់គ្រងបុគ្គលិក</h2>
+                <div class="search-container">
+                    <input type="text" id="searchEmployee" placeholder="ស្វែងរកបុគ្គលិក..." onkeyup="searchEmployees()">
+                </div>
+                
+                <button class="btn btn-success" onclick="showAddForm()">បន្ថែមបុគ្គលិកថ្មី</button>
+                
+                <div id="employeeForm" style="display:none; margin-top:20px;">
+                    <h3 id="formTitle">បន្ថែមបុគ្គលិកថ្មី</h3>
+                    <input type="hidden" id="employeeId">
+                    
+                    <div class="form-group">
+                        <label for="fullName">ឈ្មោះពេញ</label>
+                        <input type="text" id="fullName" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="gender">ភេទ</label>
+                        <select id="gender">
+                            <option value="male">ប្រុស</option>
+                            <option value="female">ស្រី</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="dob">ថ្ងៃខែឆ្នាំកំណើត</label>
+                        <input type="date" id="dob" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="position">តួនាទី</label>
+                        <input type="text" id="position" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="department">ផ្នែក</label>
+                        <input type="text" id="department" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="salary">ប្រាក់ខែ</label>
+                        <input type="number" id="salary" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="status">ស្ថានភាព</label>
+                        <select id="status">
+                            <option value="active">កំពុងធ្វើការ</option>
+                            <option value="new">ថ្មីចូល</option>
+                            <option value="resigned">លាឈប់</option>
+                            <option value="terminated">បញ្ចប់កិច្ចសន្យា</option>
+                            <option value="replaced">បានជំនួស</option>
+                        </select>
+                    </div>
+                    
+                    <button class="btn" onclick="saveEmployee()">រក្សាទុក</button>
+                    <button class="btn btn-danger" onclick="cancelForm()">បោះបង់</button>
+                </div>
+                
+                <table id="employeeTable">
+                    <thead>
+                        <tr>
+                            <th>ល.រ</th>
+                            <th>ឈ្មោះពេញ</th>
+                            <th>ភេទ</th>
+                            <th>តួនាទី</th>
+                            <th>ផ្នែក</th>
+                            <th>ស្ថានភាព</th>
+                            <th>សកម្មភាព</th>
+                        </tr>
+                    </thead>
+                    <tbody id="employeeTableBody">
+                        <!-- Employee data will be loaded here -->
+                    </tbody>
+                </table>
+            </div>
+            
+            <div id="newJoin" class="tab-content">
+                <h2>បុគ្គលិកថ្មីចូល</h2>
+                <table id="newJoinTable">
+                    <thead>
+                        <tr>
+                            <th>ល.រ</th>
+                            <th>ឈ្មោះពេញ</th>
+                            <th>ភេទ</th>
+                            <th>តួនាទី</th>
+                            <th>ផ្នែក</th>
+                            <th>ថ្ងៃចូល</th>
+                        </tr>
+                    </thead>
+                    <tbody id="newJoinTableBody">
+                        <!-- New join data will be loaded here -->
+                    </tbody>
+                </table>
+            </div>
+            
+            <div id="resigned" class="tab-content">
+                <h2>បុគ្គលិកឈប់/បញ្ចប់</h2>
+                <div class="filter-container">
+                    <label for="filterStatus">ច្រោះតាមស្ថានភាព:</label>
+                    <select id="filterStatus" onchange="filterResigned()">
+                        <option value="all">ទាំងអស់</option>
+                        <option value="resigned">ឈប់</option>
+                        <option value="terminated">បញ្ចប់កិច្ចសន្យា</option>
+                        <option value="replaced">ជំនួស</option>
+                    </select>
+                </div>
+                
+                <table id="resignedTable">
+                    <thead>
+                        <tr>
+                            <th>ល.រ</th>
+                            <th>ឈ្មោះពេញ</th>
+                            <th>តួនាទី</th>
+                            <th>ផ្នែក</th>
+                            <th>ស្ថានភាព</th>
+                            <th>ថ្ងៃចាកចេញ</th>
+                        </tr>
+                    </thead>
+                    <tbody id="resignedTableBody">
+                        <!-- Resigned data will be loaded here -->
+                    </tbody>
+                </table>
+            </div>
+            
+            <div id="reports" class="tab-content">
+                <h2>របាយការណ៍ប្រចាំខែ</h2>
+                <div class="form-group">
+                    <label for="reportMonth">ជ្រើសរើសខែ:</label>
+                    <input type="month" id="reportMonth" onchange="generateReport()">
+                </div>
+                
+                <div id="reportResult">
+                    <!-- Report will be generated here -->
+                </div>
+                
+                <button class="btn btn-excel" onclick="exportReportToExcel()">Export Report to Excel</button>
+            </div>
+            
+            <div id="userMgmt" class="tab-content">
+                <h2>គ្រប់គ្រងអ្នកប្រើប្រាស់</h2>
+                <button class="btn btn-success" onclick="showAddUserForm()">បន្ថែមអ្នកប្រើប្រាស់ថ្មី</button>
+                
+                <div id="userForm" style="display:none; margin-top:20px;">
+                    <h3 id="userFormTitle">បន្ថែមអ្នកប្រើប្រាស់ថ្មី</h3>
+                    <input type="hidden" id="userId">
+                    
+                    <div class="form-group">
+                        <label for="username">ឈ្មោះអ្នកប្រើប្រាស់</label>
+                        <input type="text" id="username" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="password">ពាក្យសម្ងាត់</label>
+                        <input type="password" id="password" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="userLevel">កម្រិតអ្នកប្រើប្រាស់</label>
+                        <select id="userLevelSelect">
+                            <option value="admin">អ្នកគ្រប់គ្រង</option>
+                            <option value="manager">អ្នកគ្រប់គ្រងផ្នែក</option>
+                            <option value="staff">បុគ្គលិក</option>
+                        </select>
+                    </div>
+                    
+                    <button class="btn" onclick="saveUser()">រក្សាទុក</button>
+                    <button class="btn btn-danger" onclick="cancelUserForm()">បោះបង់</button>
+                </div>
+                
+                <table id="userTable">
+                    <thead>
+                        <tr>
+                            <th>ល.រ</th>
+                            <th>ឈ្មោះអ្នកប្រើប្រាស់</th>
+                            <th>កម្រិត</th>
+                            <th>សកម្មភាព</th>
+                        </tr>
+                    </thead>
+                    <tbody id="userTableBody">
+                        <!-- User data will be loaded here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <div class="login-container" id="loginContainer">
+        <h2 style="text-align:center;">ការចូលប្រើប្រព័ន្ធ</h2>
+        <div class="form-group">
+            <label for="loginUsername">ឈ្មោះអ្នកប្រើប្រាស់:</label>
+            <input type="text" id="loginUsername" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="loginPassword">ពាក្យសម្ងាត់:</label>
+            <input type="password" id="loginPassword" required>
+        </div>
+        
+        <button class="btn" style="width:100%;" onclick="login()">ចូលប្រព័ន្ធ</button>
+    </div>
+
+    <script>
+        // Sample data
+        let employees = [
+            {id: 1, fullName: "វង្ស សុភា", gender: "male", dob: "1990-05-15", position: "អ្នកគ្រប់គ្រង", department: "IT", salary: 1500, status: "active"},
+            {id: 2, fullName: "សុខ សំអាត", gender: "male", dob: "1985-08-20", position: "អ្នកគ្រប់គ្រងផ្នែក", department: "HR", salary: 1200, status: "active"},
+            {id: 3, fullName: "មាស ស្រីណេត", gender: "female", dob: "1995-03-10", position: "អ្នកវិភាគ", department: "Finance", salary: 1000, status: "new"},
+            {id: 4, fullName: "ធីតា រស្មី", gender: "female", dob: "1988-11-25", position: "អ្នកគ្រប់គ្រង", department: "Marketing", salary: 1300, status: "resigned"},
+            {id: 5, fullName: "ពេជ្រ មុនីវណ្ណ", gender: "male", dob: "1992-07-30", position: "អ្នកអភិវឌ្ឍន៍", department: "IT", salary: 1100, status: "terminated"}
+        ];
+        
+        let users = [
+            {id: 1, username: "admin", password: "admin123", level: "admin"},
+            {id: 2, username: "manager", password: "manager123", level: "manager"},
+            {id: 3, username: "staff", password: "staff123", level: "staff"}
+        ];
+        
+        let currentUser = null;
+        
+        // Initialize the page
+        document.addEventListener('DOMContentLoaded', function() {
+            checkLogin();
+        });
+        
+        function checkLogin() {
+            // Check if user is logged in (in a real app, you would check session or token)
+            if (!currentUser) {
+                document.getElementById('mainContainer').style.display = 'none';
+                document.getElementById('loginContainer').style.display = 'block';
+            } else {
+                document.getElementById('mainContainer').style.display = 'block';
+                document.getElementById('loginContainer').style.display = 'none';
+                loadAllData();
+            }
+        }
+        
+        function login() {
+            const username = document.getElementById('loginUsername').value;
+            const password = document.getElementById('loginPassword').value;
+            
+            // Find user in users array
+            const user = users.find(u => u.username === username && u.password === password);
+            
+            if (user) {
+                currentUser = user;
+                document.getElementById('userLevel').textContent = `អ្នកប្រើប្រាស់: ${getUserLevelName(user.level)}`;
+                checkLogin();
+            } else {
+                alert('ឈ្មោះអ្នកប្រើប្រាស់ ឬពាក្យសម្ងាត់មិនត្រឹមត្រូវ!');
+            }
+        }
+        
+        function getUserLevelName(level) {
+            switch(level) {
+                case 'admin': return 'អ្នកគ្រប់គ្រង';
+                case 'manager': return 'អ្នកគ្រប់គ្រងផ្នែក';
+                case 'staff': return 'បុគ្គលិក';
+                default: return 'អ្នកប្រើប្រាស់';
+            }
+        }
+        
+        function logout() {
+            currentUser = null;
+            checkLogin();
+        }
+        
+        function loadAllData() {
+            loadEmployees();
+            loadNewJoins();
+            loadResigned();
+            loadUsers();
+        }
+        
+        function openTab(tabId) {
+            // Hide all tab contents
+            const tabContents = document.getElementsByClassName('tab-content');
+            for (let i = 0; i < tabContents.length; i++) {
+                tabContents[i].classList.remove('active');
+            }
+            
+            // Remove active class from all tab buttons
+            const tabButtons = document.getElementsByClassName('tab-btn');
+            for (let i = 0; i < tabButtons.length; i++) {
+                tabButtons[i].classList.remove('active');
+            }
+            
+            // Show the selected tab content and mark button as active
+            document.getElementById(tabId).classList.add('active');
+            event.currentTarget.classList.add('active');
+        }
+        
+        function loadEmployees() {
+            const tableBody = document.getElementById('employeeTableBody');
+            tableBody.innerHTML = '';
+            
+            employees.forEach((emp, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td>${emp.fullName}</td>
+                    <td>${emp.gender === 'male' ? 'ប្រុស' : 'ស្រី'}</td>
+                    <td>${emp.position}</td>
+                    <td>${emp.department}</td>
+                    <td>${getStatusName(emp.status)}</td>
+                    <td>
+                        <button class="btn" onclick="editEmployee(${emp.id})">កែសម្រួល</button>
+                        <button class="btn btn-danger" onclick="deleteEmployee(${emp.id})">លុប</button>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+        
+        function getStatusName(status) {
+            switch(status) {
+                case 'active': return 'កំពុងធ្វើការ';
+                case 'new': return 'ថ្មីចូល';
+                case 'resigned': return 'ឈប់';
+                case 'terminated': return 'បញ្ចប់កិច្ចសន្យា';
+                case 'replaced': return 'ជំនួស';
+                default: return status;
+            }
+        }
+        
+        function showAddForm() {
+            document.getElementById('employeeForm').style.display = 'block';
+            document.getElementById('formTitle').textContent = 'បន្ថែមបុគ្គលិកថ្មី';
+            document.getElementById('employeeId').value = '';
+            document.getElementById('fullName').value = '';
+            document.getElementById('gender').value = 'male';
+            document.getElementById('dob').value = '';
+            document.getElementById('position').value = '';
+            document.getElementById('department').value = '';
+            document.getElementById('salary').value = '';
+            document.getElementById('status').value = 'active';
+        }
+        
+        function editEmployee(id) {
+            const emp = employees.find(e => e.id === id);
+            if (emp) {
+                document.getElementById('employeeForm').style.display = 'block';
+                document.getElementById('formTitle').textContent = 'កែសម្រួលបុគ្គលិក';
+                document.getElementById('employeeId').value = emp.id;
+                document.getElementById('fullName').value = emp.fullName;
+                document.getElementById('gender').value = emp.gender;
+                document.getElementById('dob').value = emp.dob;
+                document.getElementById('position').value = emp.position;
+                document.getElementById('department').value = emp.department;
+                document.getElementById('salary').value = emp.salary;
+                document.getElementById('status').value = emp.status;
+            }
+        }
+        
+        function saveEmployee() {
+            const id = document.getElementById('employeeId').value;
+            const fullName = document.getElementById('fullName').value;
+            const gender = document.getElementById('gender').value;
+            const dob = document.getElementById('dob').value;
+            const position = document.getElementById('position').value;
+            const department = document.getElementById('department').value;
+            const salary = document.getElementById('salary').value;
+            const status = document.getElementById('status').value;
+            
+            if (!fullName || !dob || !position || !department || !salary) {
+                alert('សូមបំពេញព័ត៌មានចាំបាច់ទាំងអស់!');
+                return;
+            }
+            
+            if (id) {
+                // Update existing employee
+                const index = employees.findIndex(e => e.id == id);
+                if (index !== -1) {
+                    employees[index] = {id: parseInt(id), fullName, gender, dob, position, department, salary: parseFloat(salary), status};
+                }
+            } else {
+                // Add new employee
+                const newId = employees.length > 0 ? Math.max(...employees.map(e => e.id)) + 1 : 1;
+                employees.push({id: newId, fullName, gender, dob, position, department, salary: parseFloat(salary), status});
+            }
+            
+            cancelForm();
+            loadAllData();
+        }
+        
+        function deleteEmployee(id) {
+            if (confirm('តើអ្នកពិតជាចង់លុបបុគ្គលិកនេះមែនទេ?')) {
+                employees = employees.filter(e => e.id !== id);
+                loadAllData();
+            }
+        }
+        
+        function cancelForm() {
+            document.getElementById('employeeForm').style.display = 'none';
+        }
+        
+        function searchEmployees() {
+            const searchTerm = document.getElementById('searchEmployee').value.toLowerCase();
+            const filtered = employees.filter(emp => 
+                emp.fullName.toLowerCase().includes(searchTerm) || 
+                emp.position.toLowerCase().includes(searchTerm) ||
+                emp.department.toLowerCase().includes(searchTerm));
+            
+            const tableBody = document.getElementById('employeeTableBody');
+            tableBody.innerHTML = '';
+            
+            filtered.forEach((emp, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td>${emp.fullName}</td>
+                    <td>${emp.gender === 'male' ? 'ប្រុស' : 'ស្រី'}</td>
+                    <td>${emp.position}</td>
+                    <td>${emp.department}</td>
+                    <td>${getStatusName(emp.status)}</td>
+                    <td>
+                        <button class="btn" onclick="editEmployee(${emp.id})">កែសម្រួល</button>
+                        <button class="btn btn-danger" onclick="deleteEmployee(${emp.id})">លុប</button>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+        
+        function loadNewJoins() {
+            const newJoins = employees.filter(emp => emp.status === 'new');
+            const tableBody = document.getElementById('newJoinTableBody');
+            tableBody.innerHTML = '';
+            
+            newJoins.forEach((emp, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td>${emp.fullName}</td>
+                    <td>${emp.gender === 'male' ? 'ប្រុស' : 'ស្រី'}</td>
+                    <td>${emp.position}</td>
+                    <td>${emp.department}</td>
+                    <td>${new Date().toLocaleDateString()}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+        
+        function loadResigned() {
+            const resigned = employees.filter(emp => emp.status === 'resigned' || emp.status === 'terminated' || emp.status === 'replaced');
+            const tableBody = document.getElementById('resignedTableBody');
+            tableBody.innerHTML = '';
+            
+            resigned.forEach((emp, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td>${emp.fullName}</td>
+                    <td>${emp.position}</td>
+                    <td>${emp.department}</td>
+                    <td>${getStatusName(emp.status)}</td>
+                    <td>${new Date().toLocaleDateString()}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+        
+        function filterResigned() {
+            const status = document.getElementById('filterStatus').value;
+            let filtered = [];
+            
+            if (status === 'all') {
+                filtered = employees.filter(emp => emp.status === 'resigned' || emp.status === 'terminated' || emp.status === 'replaced');
+            } else {
+                filtered = employees.filter(emp => emp.status === status);
+            }
+            
+            const tableBody = document.getElementById('resignedTableBody');
+            tableBody.innerHTML = '';
+            
+            filtered.forEach((emp, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td>${emp.fullName}</td>
+                    <td>${emp.position}</td>
+                    <td>${emp.department}</td>
+                    <td>${getStatusName(emp.status)}</td>
+                    <td>${new Date().toLocaleDateString()}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+        
+        function generateReport() {
+            const month = document.getElementById('reportMonth').value;
+            if (!month) {
+                alert('សូមជ្រើសរើសខែ!');
+                return;
+            }
+            
+            const [year, monthNum] = month.split('-');
+            const reportResult = document.getElementById('reportResult');
+            
+            // In a real app, you would generate an actual report based on the selected month
+            reportResult.innerHTML = `
+                <h3>របាយការណ៍ប្រចាំខែ ${monthNum}/${year}</h3>
+                <p>ចំនួនបុគ្គលិកសរុប: ${employees.length}</p>
+                <p>បុគ្គលិកថ្មីចូល: ${employees.filter(e => e.status === 'new').length}</p>
+                <p>បុគ្គលិកឈប់: ${employees.filter(e => e.status === 'resigned').length}</p>
+                <p>បុគ្គលិកបញ្ចប់កិច្ចសន្យា: ${employees.filter(e => e.status === 'terminated').length}</p>
+                <p>បុគ្គលិកជំនួស: ${employees.filter(e => e.status === 'replaced').length}</p>
+                
+                <h4>បុគ្គលិកតាមផ្នែក</h4>
+                <ul id="departmentList"></ul>
+            `;
+            
+            // Group by department
+            const departmentGroups = {};
+            employees.forEach(emp => {
+                if (!departmentGroups[emp.department]) {
+                    departmentGroups[emp.department] = 0;
+                }
+                departmentGroups[emp.department]++;
+            });
+            
+            const departmentList = document.getElementById('departmentList');
+            for (const dept in departmentGroups) {
+                const li = document.createElement('li');
+                li.textContent = `${dept}: ${departmentGroups[dept]}`;
+                departmentList.appendChild(li);
+            }
+        }
+        
+        function exportToExcel() {
+            // In a real app, you would implement actual Excel export
+            alert('នឹងបញ្ជូនទិន្នន័យទៅជាឯកសារ Excel...');
+            
+            // This is just a simulation
+            let csvContent = "ល.រ,ឈ្មោះពេញ,ភេទ,តួនាទី,ផ្នែក,ប្រាក់ខែ,ស្ថានភាព\n";
+            
+            employees.forEach((emp, index) => {
+                csvContent += `${index + 1},${emp.fullName},${emp.gender === 'male' ? 'ប្រុស' : 'ស្រី'},${emp.position},${emp.department},${emp.salary},${getStatusName(emp.status)}\n`;
+            });
+            
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.setAttribute('href', url);
+            link.setAttribute('download', 'បុគ្គលិក.csv');
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+        
+        function exportReportToExcel() {
+            const month = document.getElementById('reportMonth').value;
+            if (!month) {
+                alert('សូមជ្រើសរើសខែជាមុនសិន!');
+                return;
+            }
+            
+            const [year, monthNum] = month.split('-');
+            alert(`នឹងបញ្ជូនរបាយការណ៍ខែ ${monthNum}/${year} ទៅជាឯកសារ Excel...`);
+        }
+        
+        function loadUsers() {
+            if (currentUser.level !== 'admin') {
+                document.getElementById('userMgmt').innerHTML = '<p>អ្នកមិនមានសិទ្ធិចូលប្រើមុខងារនេះទេ!</p>';
+                return;
+            }
+            
+            const tableBody = document.getElementById('userTableBody');
+            tableBody.innerHTML = '';
+            
+            users.forEach((user, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td>${user.username}</td>
+                    <td>${getUserLevelName(user.level)}</td>
+                    <td>
+                        <button class="btn" onclick="editUser(${user.id})">កែសម្រួល</button>
+                        <button class="btn btn-danger" onclick="deleteUser(${user.id})">លុប</button>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+        
+        function showAddUserForm() {
+            document.getElementById('userForm').style.display = 'block';
+            document.getElementById('userFormTitle').textContent = 'បន្ថែមអ្នកប្រើប្រាស់ថ្មី';
+            document.getElementById('userId').value = '';
+            document.getElementById('username').value = '';
+            document.getElementById('password').value = '';
+            document.getElementById('userLevelSelect').value = 'staff';
+        }
+        
+        function editUser(id) {
+            const user = users.find(u => u.id === id);
+            if (user) {
+                document.getElementById('userForm').style.display = 'block';
+                document.getElementById('userFormTitle').textContent = 'កែសម្រួលអ្នកប្រើប្រាស់';
+                document.getElementById('userId').value = user.id;
+                document.getElementById('username').value = user.username;
+                document.getElementById('password').value = user.password;
+                document.getElementById('userLevelSelect').value = user.level;
+            }
+        }
+        
+        function saveUser() {
+            const id = document.getElementById('userId').value;
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const level = document.getElementById('userLevelSelect').value;
+            
+            if (!username || !password) {
+                alert('សូមបំពេញព័ត៌មានចាំបាច់ទាំងអស់!');
+                return;
+            }
+            
+            if (id) {
+                // Update existing user
+                const index = users.findIndex(u => u.id == id);
+                if (index !== -1) {
+                    users[index] = {id: parseInt(id), username, password, level};
+                }
+            } else {
+                // Add new user
+                const newId = users.length > 0 ? Math.max(...users.map(u => u.id)) + 1 : 1;
+                users.push({id: newId, username, password, level});
+            }
+            
+            cancelUserForm();
+            loadUsers();
+        }
+        
+        function deleteUser(id) {
+            if (confirm('តើអ្នកពិតជាចង់លុបអ្នកប្រើប្រាស់នេះមែនទេ?')) {
+                users = users.filter(u => u.id !== id);
+                loadUsers();
+            }
+        }
+        
+        function cancelUserForm() {
+            document.getElementById('userForm').style.display = 'none';
+        }
+    </script>
+</body>
+</html>
